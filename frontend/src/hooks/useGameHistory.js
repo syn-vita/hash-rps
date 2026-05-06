@@ -27,7 +27,7 @@ export function useGameHistory() {
             abi: CONTRACT_ABI,
             eventName: "GameCreated",
             args: { player1: address },
-            fromBlock: 0n,
+            fromBlock: 10802455n,
             toBlock: "latest"
           }),
           publicClient.getLogs({
@@ -35,7 +35,7 @@ export function useGameHistory() {
             abi: CONTRACT_ABI,
             eventName: "GameJoined",
             args: { player2: address },
-            fromBlock: 0n,
+            fromBlock: 10802455n,
             toBlock: "latest"
           })
         ]);
@@ -74,7 +74,7 @@ export function useGameHistory() {
         );
 
         const finishedGames = gamesFromChain
-          .filter((game) => game.phase === 3)
+          .filter((game) => game.phase === 3 && game.player2 !== "0x0000000000000000000000000000000000000000")
           .sort((left, right) => Number(right.gameId - left.gameId));
 
         if (!cancelled) {
