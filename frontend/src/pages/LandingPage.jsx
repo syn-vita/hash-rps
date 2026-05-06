@@ -10,32 +10,34 @@ export default function LandingPage() {
 
       <section className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col justify-center px-6 py-14">
         <motion.div
-          className="grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]"
+          className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
-          <div className="space-y-6">
-            <p className="text-sm uppercase tracking-[0.38em] text-secondary">Ethereum Sepolia Showcase</p>
-            <h1 className="max-w-3xl text-5xl leading-[1.15] sm:text-6xl">
-              Rock, Paper, Scissors with hidden commits and public truth.
-            </h1>
-            <p className="max-w-2xl text-2xl leading-relaxed text-foreground/78">
-              Two wallets. Two devices. Zero referee. Each move locks privately, reveals later, and resolves on-chain.
+          <div className="space-y-8">
+            <div className="space-y-2">
+              <p className="text-sm uppercase tracking-[0.38em] text-secondary">Ethereum Sepolia</p>
+              <h1 className="text-6xl leading-none tracking-tight sm:text-7xl">
+                Hash RPS
+              </h1>
+            </div>
+            <p className="max-w-xl text-2xl leading-relaxed text-foreground/78">
+              Rock, Paper, Scissors on-chain. Moves stay hidden until both players reveal — no referee, no trust required.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <ConnectButton accountStatus="address" chainStatus="icon" showBalance={false} />
-              <span className="text-sm uppercase tracking-[0.24em] text-foreground/55">
-                Connect wallet to create or join a match
+              <span className="text-sm uppercase tracking-[0.24em] text-foreground/50">
+                Connect wallet to play
               </span>
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <HeroPanel title="Commit-Reveal" body="Moves stay hidden until both players are locked in." />
-            <HeroPanel title="No House" body="Every state transition is enforced by the contract." />
-            <HeroPanel title="Timeout Win" body="If the opponent stalls, the reveal timer protects the match." />
-            <HeroPanel title="Presentation Ready" body="Built to demo trustless fairness, state machines, and wallet UX." />
+            <HeroPanel title="Commit-Reveal" body="Your move is hashed and locked on-chain before either player sees the other's choice." />
+            <HeroPanel title="No Middleman" body="Every state transition — join, commit, reveal, result — is enforced by the smart contract." />
+            <HeroPanel title="Timeout Protection" body="If your opponent ghosts after you reveal, you can claim the win once the timer expires." />
+            <HeroPanel title="On-Chain History" body="Every completed match is permanently recorded and queryable from contract events." />
           </div>
         </motion.div>
       </section>
@@ -52,7 +54,7 @@ function HeroPanel({ title, body }) {
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
       <p className="mb-3 text-xs uppercase tracking-[0.3em] text-secondary">{title}</p>
-      <p className="text-xl leading-relaxed text-foreground/82">{body}</p>
+      <p className="text-lg leading-relaxed text-foreground/82">{body}</p>
     </motion.article>
   );
 }
