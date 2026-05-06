@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { GameContext } from "../contexts/GameContext";
 import { useActiveGameId, useGameData } from "../hooks/useGameState";
@@ -7,9 +7,21 @@ export function GameProvider({ children }) {
   const { address, isConnected } = useAccount();
   const [gameIdOverride, setGameIdOverride] = useState(null);
   const { data: activeGameId = 0n, isLoading: isActiveGameLoading } = useActiveGameId();
-  const selectedGameId = gameIdOverride ?? activeGameId;
+  const selectedGameId = gameIdOverride ?? (activeGameId > 0n ? activeGameId : null);
   const { data: currentGameData, isLoading: isGameLoading } = useGameData(selectedGameId);
   const currentGame = mapGameData(currentGameData, address, selectedGameId);
+
+  useEffect(() => {
+    if (activeGameId > 0n) {
+      setGameIdOverride(activeGameId);
+    }
+  }, [activeGameId]);
+
+  useEffect(() => {
+    if (!isConnected) {
+      setGameIdOverride(null);
+    }
+  }, [isConnected]);
 
   const value = {
     activeGameId,
@@ -20,6 +32,9 @@ export function GameProvider({ children }) {
       setGameIdOverride(gameId);
     },
     clearSelectedGame() {
+      setGameIdOverride(null);
+    },
+    leaveGame() {
       setGameIdOverride(null);
     }
   };
