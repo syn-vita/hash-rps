@@ -34,41 +34,50 @@ describe("RockPaperScissors", function () {
     return { rps, player1, player2, outsider };
   }
 
+  async function getGameId(rps, tx) {
+    const receipt = await tx.wait();
+    const event = receipt.logs
+      .map((log) => { try { return rps.interface.parseLog(log); } catch { return null; } })
+      .find((e) => e?.name === "GameCreated");
+    return event.args.gameId;
+  }
+
   async function createCommittedGame(rps, player1, player2, move1, move2) {
     const salt1 = randomSalt();
     const salt2 = randomSalt();
 
-    await rps.connect(player1).createGame();
-    await rps.connect(player2).joinGame(1);
-    await rps.connect(player1).commitMove(1, buildCommitHash(move1, salt1));
-    await rps.connect(player2).commitMove(1, buildCommitHash(move2, salt2));
+    const tx = await rps.connect(player1).createGame();
+    const gameId = await getGameId(rps, tx);
+    await rps.connect(player2).joinGame(gameId);
+    await rps.connect(player1).commitMove(gameId, buildCommitHash(move1, salt1));
+    await rps.connect(player2).commitMove(gameId, buildCommitHash(move2, salt2));
 
-    return { salt1, salt2 };
+    return { gameId, salt1, salt2 };
   }
 
   it("creates a new game for player1", async function () {
     const { rps, player1 } = await deployFixture();
 
-    await expect(rps.connect(player1).createGame())
-      .to.emit(rps, "GameCreated")
-      .withArgs(1n, player1.address);
-
-    const game = await rps.getGame(1);
+    const tx = await rps.connect(player1).createGame();
+    const gameId = await getGameId(rps, tx);
+    const game = await rps.getGame(gameId);
 
     expect(game.player1).to.equal(player1.address);
     expect(game.phase).to.equal(Phase.Created);
+    expect(gameId).to.be.greaterThan(0n);
   });
 
   it("allows player2 to join an existing game", async function () {
     const { rps, player1, player2 } = await deployFixture();
 
-    await rps.connect(player1).createGame();
-    await expect(rps.connect(player2).joinGame(1))
+    const tx = await rps.connect(player1).createGame();
+    const gameId = await getGameId(rps, tx);
+
+    await expect(rps.connect(player2).joinGame(gameId))
       .to.emit(rps, "GameJoined")
-      .withArgs(1n, player2.address);
+      .withArgs(gameId, player2.address);
 
-    const game = await rps.getGame(1);
-
+    const game = await rps.getGame(gameId);
     expect(game.player2).to.equal(player2.address);
   });
 
@@ -77,13 +86,13 @@ describe("RockPaperScissors", function () {
     const salt1 = randomSalt();
     const salt2 = randomSalt();
 
-    await rps.connect(player1).createGame();
-    await rps.connect(player2).joinGame(1);
-    await rps.connect(player1).commitMove(1, buildCommitHash(Move.Rock, salt1));
-    await rps.connect(player2).commitMove(1, buildCommitHash(Move.Paper, salt2));
+    const tx = await rps.connect(player1).createGame();
+    const gameId = await getGameId(rps, tx);
+    await rps.connect(player2).joinGame(gameId);
+    await rps.connect(player1).commitMove(gameId, buildCommitHash(Move.Rock, salt1));
+    await rps.connect(player2).commitMove(gameId, buildCommitHash(Move.Paper, salt2));
 
-    const game = await rps.getGame(1);
-
+    const game = await rps.getGame(gameId);
     expect(game.phase).to.equal(Phase.Committed);
     expect(game.revealDeadline).to.be.greaterThan(0n);
   });
@@ -93,17 +102,17 @@ describe("RockPaperScissors", function () {
     const salt1 = randomSalt();
     const salt2 = randomSalt();
 
-    await rps.connect(player1).createGame();
-    await rps.connect(player2).joinGame(1);
-    await rps.connect(player1).commitMove(1, buildCommitHash(Move.Rock, salt1));
-    await rps.connect(player2).commitMove(1, buildCommitHash(Move.Scissors, salt2));
-    await rps.connect(player1).revealMove(1, Move.Rock, salt1);
-    await expect(rps.connect(player2).revealMove(1, Move.Scissors, salt2))
+    const tx = await rps.connect(player1).createGame();
+    const gameId = await getGameId(rps, tx);
+    await rps.connect(player2).joinGame(gameId);
+    await rps.connect(player1).commitMove(gameId, buildCommitHash(Move.Rock, salt1));
+    await rps.connect(player2).commitMove(gameId, buildCommitHash(Move.Scissors, salt2));
+    await rps.connect(player1).revealMove(gameId, Move.Rock, salt1);
+    await expect(rps.connect(player2).revealMove(gameId, Move.Scissors, salt2))
       .to.emit(rps, "GameFinished")
-      .withArgs(1n, player1.address, false);
+      .withArgs(gameId, player1.address, false);
 
-    const game = await rps.getGame(1);
-
+    const game = await rps.getGame(gameId);
     expect(game.phase).to.equal(Phase.Finished);
     expect(game.winner).to.equal(player1.address);
     expect(game.move1).to.equal(Move.Rock);
@@ -113,9 +122,10 @@ describe("RockPaperScissors", function () {
   it("rejects joining your own game", async function () {
     const { rps, player1 } = await deployFixture();
 
-    await rps.connect(player1).createGame();
+    const tx = await rps.connect(player1).createGame();
+    const gameId = await getGameId(rps, tx);
 
-    await expect(rps.connect(player1).joinGame(1))
+    await expect(rps.connect(player1).joinGame(gameId))
       .to.be.revertedWith("Cannot join your own game");
   });
 
@@ -124,53 +134,41 @@ describe("RockPaperScissors", function () {
     const salt1 = randomSalt();
     const salt2 = randomSalt();
 
-    await rps.connect(player1).createGame();
-    await rps.connect(player2).joinGame(1);
-    await rps.connect(player1).commitMove(1, buildCommitHash(Move.Rock, salt1));
-    await rps.connect(player2).commitMove(1, buildCommitHash(Move.Paper, salt2));
+    const tx = await rps.connect(player1).createGame();
+    const gameId = await getGameId(rps, tx);
+    await rps.connect(player2).joinGame(gameId);
+    await rps.connect(player1).commitMove(gameId, buildCommitHash(Move.Rock, salt1));
+    await rps.connect(player2).commitMove(gameId, buildCommitHash(Move.Paper, salt2));
 
-    await expect(rps.connect(player1).revealMove(1, Move.Rock, randomSalt()))
+    await expect(rps.connect(player1).revealMove(gameId, Move.Rock, randomSalt()))
       .to.be.revertedWith("Hash does not match commit");
   });
 
   it("allows a revealed player to claim timeout after the deadline", async function () {
     const { rps, player1, player2 } = await deployFixture();
-    const { salt1 } = await createCommittedGame(
-      rps,
-      player1,
-      player2,
-      Move.Rock,
-      Move.Scissors
-    );
-    await rps.connect(player1).revealMove(1, Move.Rock, salt1);
+    const { gameId, salt1 } = await createCommittedGame(rps, player1, player2, Move.Rock, Move.Scissors);
 
+    await rps.connect(player1).revealMove(gameId, Move.Rock, salt1);
     await time.increase(301);
 
-    await expect(rps.connect(player1).claimTimeout(1))
+    await expect(rps.connect(player1).claimTimeout(gameId))
       .to.emit(rps, "TimeoutClaimed")
-      .withArgs(1n, player1.address);
+      .withArgs(gameId, player1.address);
 
-    const game = await rps.getGame(1);
-
+    const game = await rps.getGame(gameId);
     expect(game.phase).to.equal(Phase.Finished);
     expect(game.winner).to.equal(player1.address);
   });
 
   it("tracks active games and clears them after a finished match", async function () {
     const { rps, player1, player2 } = await deployFixture();
-    const { salt1, salt2 } = await createCommittedGame(
-      rps,
-      player1,
-      player2,
-      Move.Rock,
-      Move.Scissors
-    );
+    const { gameId, salt1, salt2 } = await createCommittedGame(rps, player1, player2, Move.Rock, Move.Scissors);
 
-    expect(await rps.getActiveGame(player1.address)).to.equal(1n);
-    expect(await rps.getActiveGame(player2.address)).to.equal(1n);
+    expect(await rps.getActiveGame(player1.address)).to.equal(gameId);
+    expect(await rps.getActiveGame(player2.address)).to.equal(gameId);
 
-    await rps.connect(player1).revealMove(1, Move.Rock, salt1);
-    await rps.connect(player2).revealMove(1, Move.Scissors, salt2);
+    await rps.connect(player1).revealMove(gameId, Move.Rock, salt1);
+    await rps.connect(player2).revealMove(gameId, Move.Scissors, salt2);
 
     expect(await rps.getActiveGame(player1.address)).to.equal(0n);
     expect(await rps.getActiveGame(player2.address)).to.equal(0n);
@@ -180,11 +178,12 @@ describe("RockPaperScissors", function () {
     const { rps, player1, player2 } = await deployFixture();
     const salt1 = randomSalt();
 
-    await rps.connect(player1).createGame();
-    await rps.connect(player2).joinGame(1);
-    await rps.connect(player1).commitMove(1, buildCommitHash(Move.Rock, salt1));
+    const tx = await rps.connect(player1).createGame();
+    const gameId = await getGameId(rps, tx);
+    await rps.connect(player2).joinGame(gameId);
+    await rps.connect(player1).commitMove(gameId, buildCommitHash(Move.Rock, salt1));
 
-    await expect(rps.connect(player1).commitMove(1, buildCommitHash(Move.Paper, randomSalt())))
+    await expect(rps.connect(player1).commitMove(gameId, buildCommitHash(Move.Paper, randomSalt())))
       .to.be.revertedWith("Already committed");
   });
 
@@ -200,55 +199,45 @@ describe("RockPaperScissors", function () {
   it("rejects joining another game while already active", async function () {
     const { rps, player1, player2, outsider } = await deployFixture();
 
-    await rps.connect(player1).createGame();
-    await rps.connect(player2).joinGame(1);
-    await rps.connect(outsider).createGame();
+    const tx1 = await rps.connect(player1).createGame();
+    const gameId1 = await getGameId(rps, tx1);
+    await rps.connect(player2).joinGame(gameId1);
 
-    await expect(rps.connect(player2).joinGame(2))
+    const tx2 = await rps.connect(outsider).createGame();
+    const gameId2 = await getGameId(rps, tx2);
+
+    await expect(rps.connect(player2).joinGame(gameId2))
       .to.be.revertedWith("Already in an active game");
   });
 
   it("rejects claiming timeout before the deadline", async function () {
     const { rps, player1, player2 } = await deployFixture();
-    const { salt1 } = await createCommittedGame(
-      rps,
-      player1,
-      player2,
-      Move.Rock,
-      Move.Scissors
-    );
+    const { gameId, salt1 } = await createCommittedGame(rps, player1, player2, Move.Rock, Move.Scissors);
 
-    await rps.connect(player1).revealMove(1, Move.Rock, salt1);
+    await rps.connect(player1).revealMove(gameId, Move.Rock, salt1);
 
-    await expect(rps.connect(player1).claimTimeout(1))
+    await expect(rps.connect(player1).claimTimeout(gameId))
       .to.be.revertedWith("Deadline has not passed");
   });
 
   it("rejects claiming timeout if the caller has not revealed", async function () {
     const { rps, player1, player2 } = await deployFixture();
+    const { gameId } = await createCommittedGame(rps, player1, player2, Move.Rock, Move.Scissors);
 
-    await createCommittedGame(rps, player1, player2, Move.Rock, Move.Scissors);
     await time.increase(301);
 
-    await expect(rps.connect(player1).claimTimeout(1))
+    await expect(rps.connect(player1).claimTimeout(gameId))
       .to.be.revertedWith("You must reveal before claiming timeout");
   });
 
   it("records a draw when both players reveal the same move", async function () {
     const { rps, player1, player2 } = await deployFixture();
-    const { salt1, salt2 } = await createCommittedGame(
-      rps,
-      player1,
-      player2,
-      Move.Paper,
-      Move.Paper
-    );
+    const { gameId, salt1, salt2 } = await createCommittedGame(rps, player1, player2, Move.Paper, Move.Paper);
 
-    await rps.connect(player1).revealMove(1, Move.Paper, salt1);
-    await rps.connect(player2).revealMove(1, Move.Paper, salt2);
+    await rps.connect(player1).revealMove(gameId, Move.Paper, salt1);
+    await rps.connect(player2).revealMove(gameId, Move.Paper, salt2);
 
-    const game = await rps.getGame(1);
-
+    const game = await rps.getGame(gameId);
     expect(game.isDraw).to.equal(true);
     expect(game.winner).to.equal(ethers.ZeroAddress);
   });
@@ -268,12 +257,12 @@ describe("RockPaperScissors", function () {
 
     for (const [move1, move2, expectedWinner, expectedDraw] of combinations) {
       const { rps, player1, player2 } = await deployFixture();
-      const { salt1, salt2 } = await createCommittedGame(rps, player1, player2, move1, move2);
+      const { gameId, salt1, salt2 } = await createCommittedGame(rps, player1, player2, move1, move2);
 
-      await rps.connect(player1).revealMove(1, move1, salt1);
-      await rps.connect(player2).revealMove(1, move2, salt2);
+      await rps.connect(player1).revealMove(gameId, move1, salt1);
+      await rps.connect(player2).revealMove(gameId, move2, salt2);
 
-      const game = await rps.getGame(1);
+      const game = await rps.getGame(gameId);
       const winnerAddress =
         expectedWinner === "player1"
           ? player1.address
@@ -288,36 +277,42 @@ describe("RockPaperScissors", function () {
 
   it("allows creator to cancel a game with no opponent", async function () {
     const { rps, player1 } = await deployFixture();
-    await rps.connect(player1).createGame();
+    const tx = await rps.connect(player1).createGame();
+    const gameId = await getGameId(rps, tx);
 
-    await rps.connect(player1).cancelGame(1);
+    await rps.connect(player1).cancelGame(gameId);
 
-    const game = await rps.getGame(1);
+    const game = await rps.getGame(gameId);
     expect(game.phase).to.equal(Phase.Finished);
     expect(await rps.getActiveGame(player1.address)).to.equal(0);
   });
 
   it("allows creator to create new game after cancelling", async function () {
     const { rps, player1 } = await deployFixture();
-    await rps.connect(player1).createGame();
-    await rps.connect(player1).cancelGame(1);
-    await rps.connect(player1).createGame();
+    const tx1 = await rps.connect(player1).createGame();
+    const gameId1 = await getGameId(rps, tx1);
+    await rps.connect(player1).cancelGame(gameId1);
 
-    expect(await rps.getActiveGame(player1.address)).to.equal(2);
+    const tx2 = await rps.connect(player1).createGame();
+    const gameId2 = await getGameId(rps, tx2);
+
+    expect(await rps.getActiveGame(player1.address)).to.equal(gameId2);
   });
 
   it("rejects cancel if opponent already joined", async function () {
     const { rps, player1, player2 } = await deployFixture();
-    await rps.connect(player1).createGame();
-    await rps.connect(player2).joinGame(1);
+    const tx = await rps.connect(player1).createGame();
+    const gameId = await getGameId(rps, tx);
+    await rps.connect(player2).joinGame(gameId);
 
-    await expect(rps.connect(player1).cancelGame(1)).to.be.revertedWith("Opponent already joined");
+    await expect(rps.connect(player1).cancelGame(gameId)).to.be.revertedWith("Opponent already joined");
   });
 
   it("rejects cancel from non-creator", async function () {
     const { rps, player1, outsider } = await deployFixture();
-    await rps.connect(player1).createGame();
+    const tx = await rps.connect(player1).createGame();
+    const gameId = await getGameId(rps, tx);
 
-    await expect(rps.connect(outsider).cancelGame(1)).to.be.revertedWith("Not the game creator");
+    await expect(rps.connect(outsider).cancelGame(gameId)).to.be.revertedWith("Not the game creator");
   });
 });

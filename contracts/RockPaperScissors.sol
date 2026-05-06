@@ -59,7 +59,10 @@ contract RockPaperScissors {
     function createGame() external returns (uint256 gameId) {
         require(activeGame[msg.sender] == 0, "Already in an active game");
 
-        gameId = ++gameCount;
+        unchecked { ++gameCount; }
+        gameId = uint256(keccak256(abi.encodePacked(msg.sender, gameCount, block.timestamp))) % 900000 + 100000;
+        require(games[gameId].player1 == address(0), "Game ID collision, try again");
+
         Game storage game = games[gameId];
         game.player1 = msg.sender;
         game.phase = Phase.Created;
