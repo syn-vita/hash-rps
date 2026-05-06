@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
+import { decodeEventLog, keccak256, toBytes } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from "../contracts";
+
+const GAME_CREATED_TOPIC = keccak256(toBytes("GameCreated(uint256,address)"));
+const GAME_JOINED_TOPIC = keccak256(toBytes("GameJoined(uint256,address)"));
+const DEPLOY_BLOCK = 10802455n;
 
 export function useGameHistory() {
   const publicClient = usePublicClient();
@@ -24,32 +29,45 @@ export function useGameHistory() {
         const [createdLogs, joinedLogs] = await Promise.all([
           publicClient.getLogs({
             address: CONTRACT_ADDRESS,
-            abi: CONTRACT_ABI,
-            eventName: "GameCreated",
-            fromBlock: 10802455n,
+            topics: [GAME_CREATED_TOPIC],
+            fromBlock: DEPLOY_BLOCK,
             toBlock: "latest"
           }),
           publicClient.getLogs({
             address: CONTRACT_ADDRESS,
-            abi: CONTRACT_ABI,
-            eventName: "GameJoined",
-            fromBlock: 10802455n,
+            topics: [GAME_JOINED_TOPIC],
+            fromBlock: DEPLOY_BLOCK,
             toBlock: "latest"
           })
         ]);
 
         const normalizedAddress = address.toLowerCase();
-        const relevantLogs = [
-          ...createdLogs.filter((log) => log.args.player1?.toLowerCase() === normalizedAddress),
-          ...joinedLogs.filter((log) => log.args.player2?.toLowerCase() === normalizedAddress)
-        ];
 
-        const uniqueIds = [...new Set(
-          relevantLogs
-            .map((log) => log.args.gameId)
-            .filter((id) => id !== undefined && id !== null)
-            .map(String)
-        )].map(BigInt);
+        function decodeLog(log, eventName) {
+          try {
+            return decodeEventLog({ abi: CONTRACT_ABI, eventName, data: log.data, topics: log.topics });
+          } catch {
+            return null;
+          }
+        }
+
+        const myGameIds = new Set();
+
+        for (const log of createdLogs) {
+          const decoded = decodeLog(log, "GameCreated");
+          if (decoded?.args?.player1?.toLowerCase() === normalizedAddress) {
+            myGameIds.add(String(decoded.args.gameId));
+          }
+        }
+
+        for (const log of joinedLogs) {
+          const decoded = decodeLog(log, "GameJoined");
+          if (decoded?.args?.player2?.toLowerCase() === normalizedAddress) {
+            myGameIds.add(String(decoded.args.gameId));
+          }
+        }
+
+        const uniqueIds = [...myGameIds].map(BigInt);
 
         const gamesFromChain = await Promise.all(
           uniqueIds.map(async (gameId) => {
