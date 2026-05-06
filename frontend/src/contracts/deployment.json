@@ -1,5 +1,5 @@
 {
-  "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  "network": "hardhat",
-  "chainId": 31337
+  "address": "0xf5aA3Dfe5ee824842C8935291f699E8cb709D23A",
+  "network": "sepolia",
+  "chainId": 11155111
 }
