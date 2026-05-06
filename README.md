@@ -1,20 +1,25 @@
-# Rock Paper Scissors On-Chain
+# Hash RPS
 
-Decentralized Rock-Paper-Scissors on Ethereum using a commit-reveal scheme. Two wallets play without a trusted server deciding the outcome. The contract enforces hidden commits, reveal timing, timeout wins, and final result resolution.
+Decentralized Rock-Paper-Scissors on Ethereum Sepolia. Two wallets play without a trusted server. The smart contract enforces hidden commits, timed reveals, timeout wins, and on-chain result resolution.
+
+Live: **hash-rps.synvita.dev**
+
+## How It Works
+
+Players commit a `keccak256(move + salt)` hash before either side sees the other's choice. Once both commits are on-chain, both players reveal their actual move and salt. The contract verifies each reveal against the stored hash, determines the winner, and emits the result permanently to the chain. If a player ghosts after you reveal, a 5-minute timeout lets you claim the win.
 
 ## Stack
 
 - Solidity + Hardhat
 - React + Vite
-- Tailwind CSS
+- Tailwind CSS + Framer Motion
 - RainbowKit + Wagmi + Viem
 
 ## Prerequisites
 
 - Node.js 18+
-- A browser wallet such as MetaMask
-- Sepolia test ETH if you want to deploy/test on Sepolia
-- A WalletConnect project ID for the frontend wallet modal
+- MetaMask or any browser wallet
+- Sepolia test ETH (free from a faucet) for deployment and transactions
 
 ## Install
 
@@ -29,64 +34,54 @@ Set-Location ..
 
 ## Environment
 
-Copy the example env file:
+Create a `.env` file at the project root:
 
-```powershell
-Copy-Item .env.example .env
+```
+SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
+PRIVATE_KEY=your_deployer_private_key
 ```
 
-Fill in:
+Optional — only needed for WalletConnect QR modal (MetaMask works without it):
 
-- `SEPOLIA_RPC_URL`: Sepolia RPC endpoint from Alchemy or Infura
-- `PRIVATE_KEY`: deployer wallet private key
-- `VITE_WALLETCONNECT_PROJECT_ID`: WalletConnect Cloud project ID
+```
+VITE_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
+```
 
 ## Smart Contract
 
-Run contract tests:
+Run tests:
 
 ```powershell
-npm test -- test/RockPaperScissors.test.js
+npx hardhat test
 ```
 
 Compile:
 
 ```powershell
-npm run compile
+npx hardhat compile
 ```
-
-## Local Demo Flow
-
-Start a local Hardhat node in one terminal:
-
-```powershell
-npx hardhat node
-```
-
-Deploy the contract to that local node in another terminal:
-
-```powershell
-npx hardhat run scripts/deploy.js --network localhost
-```
-
-This rewrites:
-
-- `frontend/src/contracts/abi.json`
-- `frontend/src/contracts/deployment.json`
-
-Import one of the printed Hardhat accounts into MetaMask and point MetaMask to the local chain if you want to exercise the full wallet flow locally.
 
 ## Sepolia Deploy
-
-Deploy to Sepolia:
 
 ```powershell
 npx hardhat run scripts/deploy.js --network sepolia
 ```
 
-The deploy script also exports the ABI and deployed address to the frontend contract files.
+Writes the new ABI and contract address to `frontend/src/contracts/` automatically.
 
-## Frontend
+## Local Dev
+
+Start a local Hardhat node:
+
+```powershell
+npx hardhat node
+```
+
+Deploy to it:
+
+```powershell
+npx hardhat run scripts/deploy.js --network localhost
+```
 
 Start the frontend:
 
@@ -95,30 +90,22 @@ Set-Location frontend
 npm run dev
 ```
 
-Then open `http://localhost:5173`.
-
-Build for production:
-
-```powershell
-Set-Location frontend
-npm run build
-```
+Open `http://localhost:5173`.
 
 ## How To Play
 
-1. Connect wallet A.
-2. Create a game and share the displayed game ID.
-3. Connect wallet B and join with that game ID.
-4. Both players commit a move.
-5. Both players reveal.
-6. If one player fails to reveal before the deadline, the revealed player can claim a timeout win.
+1. Connect wallet — MetaMask on Sepolia
+2. **Player 1**: Create a game, copy the 6-digit game ID
+3. **Player 2**: Join with that game ID from a different wallet
+4. Both players commit a move (hidden on-chain)
+5. Both players reveal — contract verifies and resolves
+6. If opponent doesn't reveal within 5 minutes, the revealed player can claim a timeout win
 
 ## Project Structure
 
-```text
-contracts/   Solidity contract
-scripts/     deployment/export script
-test/        Hardhat tests
-frontend/    Vite React frontend
-docs/        Superpowers specs and plans
+```
+contracts/   Solidity smart contract
+scripts/     Deploy + ABI export script
+test/        Hardhat test suite (19 tests)
+frontend/    Vite + React frontend
 ```
