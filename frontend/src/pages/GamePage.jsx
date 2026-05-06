@@ -9,7 +9,7 @@ import Layout from "../components/Layout";
 import MoveCard from "../components/MoveCard";
 import PhaseIndicator from "../components/PhaseIndicator";
 import { useGame } from "../contexts/GameContext";
-import { useClaimTimeout, useCommitMove, useRevealMove } from "../hooks/useGameContract";
+import { useCancelGame, useClaimTimeout, useCommitMove, useRevealMove } from "../hooks/useGameContract";
 import { computeCommitHash, generateSalt, getMove, getSalt, saveMove, saveSalt } from "../lib/hash";
 import { MOVES } from "../lib/moves";
 
@@ -22,12 +22,20 @@ export default function GamePage() {
   const commitAction = useCommitMove();
   const revealAction = useRevealMove();
   const timeoutAction = useClaimTimeout();
+  const cancelAction = useCancelGame();
 
   useEffect(() => {
     if (!isGameLoading && !currentGame && activeGameId === 0n) {
       navigate("/home");
     }
   }, [activeGameId, currentGame, isGameLoading, navigate]);
+
+  useEffect(() => {
+    if (cancelAction.isSuccess) {
+      leaveGame();
+      navigate("/home");
+    }
+  }, [cancelAction.isSuccess, leaveGame, navigate]);
 
   if (isGameLoading || !currentGame) {
     return (
@@ -40,8 +48,8 @@ export default function GamePage() {
     );
   }
 
-  const isWaitingForOpponent = currentGame.phase === 0 && !currentGame.player2;
-  const isCommitSetup = currentGame.phase === 0 && Boolean(currentGame.player2);
+  const isWaitingForOpponent = currentGame.phase === 0 && (!currentGame.player2 || currentGame.player2 === "0x0000000000000000000000000000000000000000");
+  const isCommitSetup = currentGame.phase === 0 && !isWaitingForOpponent;
   const isRevealWindow = currentGame.phase === 1;
   const isFinished = currentGame.phase >= 3;
   const deadlinePassed =
@@ -82,6 +90,10 @@ export default function GamePage() {
     timeoutAction.claimTimeout(currentGame.gameId);
   }
 
+  function handleCancel() {
+    cancelAction.cancelGame(currentGame.gameId);
+  }
+
   function handlePlayAgain() {
     leaveGame();
     navigate("/home");
@@ -107,6 +119,17 @@ export default function GamePage() {
                   body="Your room is live. Share the game ID with Player 2 and wait for them to join from their own wallet."
                 >
                   <GameIdDisplay gameId={currentGame.gameId} />
+                  <button
+                    onClick={handleCancel}
+                    disabled={cancelAction.isPending || cancelAction.isConfirming}
+                    className="w-full rounded-2xl border border-border/50 bg-surface/60 px-6 py-4 text-sm uppercase tracking-[0.24em] text-foreground/70 hover:text-foreground active:scale-95 disabled:cursor-not-allowed disabled:opacity-55 motion-reduce:transform-none"
+                  >
+                    {cancelAction.isPending
+                      ? "Confirm in Wallet"
+                      : cancelAction.isConfirming
+                        ? "Cancelling"
+                        : "Cancel Game"}
+                  </button>
                 </StatePanel>
               )}
 

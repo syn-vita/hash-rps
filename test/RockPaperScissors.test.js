@@ -285,4 +285,39 @@ describe("RockPaperScissors", function () {
       expect(game.isDraw).to.equal(expectedDraw);
     }
   });
+
+  it("allows creator to cancel a game with no opponent", async function () {
+    const { rps, player1 } = await deployFixture();
+    await rps.connect(player1).createGame();
+
+    await rps.connect(player1).cancelGame(1);
+
+    const game = await rps.getGame(1);
+    expect(game.phase).to.equal(Phase.Finished);
+    expect(await rps.getActiveGame(player1.address)).to.equal(0);
+  });
+
+  it("allows creator to create new game after cancelling", async function () {
+    const { rps, player1 } = await deployFixture();
+    await rps.connect(player1).createGame();
+    await rps.connect(player1).cancelGame(1);
+    await rps.connect(player1).createGame();
+
+    expect(await rps.getActiveGame(player1.address)).to.equal(2);
+  });
+
+  it("rejects cancel if opponent already joined", async function () {
+    const { rps, player1, player2 } = await deployFixture();
+    await rps.connect(player1).createGame();
+    await rps.connect(player2).joinGame(1);
+
+    await expect(rps.connect(player1).cancelGame(1)).to.be.revertedWith("Opponent already joined");
+  });
+
+  it("rejects cancel from non-creator", async function () {
+    const { rps, player1, outsider } = await deployFixture();
+    await rps.connect(player1).createGame();
+
+    await expect(rps.connect(outsider).cancelGame(1)).to.be.revertedWith("Not the game creator");
+  });
 });

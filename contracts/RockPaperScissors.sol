@@ -41,6 +41,7 @@ contract RockPaperScissors {
 
     event GameCreated(uint256 indexed gameId, address indexed player1);
     event GameJoined(uint256 indexed gameId, address indexed player2);
+    event GameCancelled(uint256 indexed gameId, address indexed player1);
     event MoveCommitted(uint256 indexed gameId, address indexed player);
     event MoveRevealed(uint256 indexed gameId, address indexed player);
     event GameFinished(uint256 indexed gameId, address indexed winner, bool isDraw);
@@ -65,6 +66,19 @@ contract RockPaperScissors {
         activeGame[msg.sender] = gameId;
 
         emit GameCreated(gameId, msg.sender);
+    }
+
+    function cancelGame(uint256 gameId) external {
+        Game storage game = games[gameId];
+
+        require(game.player1 == msg.sender, "Not the game creator");
+        require(game.phase == Phase.Created, "Game already started");
+        require(game.player2 == address(0), "Opponent already joined");
+
+        game.phase = Phase.Finished;
+        activeGame[msg.sender] = 0;
+
+        emit GameCancelled(gameId, msg.sender);
     }
 
     function joinGame(uint256 gameId) external {

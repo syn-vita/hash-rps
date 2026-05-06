@@ -74,6 +74,21 @@ export function useRevealMove() {
   return { ...tracked, revealMove };
 }
 
+export function useCancelGame() {
+  const tracked = useTrackedWrite();
+
+  function cancelGame(gameId) {
+    tracked.writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: "cancelGame",
+      args: [gameId]
+    });
+  }
+
+  return { ...tracked, cancelGame };
+}
+
 export function useClaimTimeout() {
   const tracked = useTrackedWrite();
 

@@ -187,7 +187,7 @@ function StatusPanel({ activeGameId, currentGame, isGameLoading }) {
         />
         <StatusRow
           label="Opponent"
-          value={currentGame?.player2 ? `${currentGame.player2.slice(0, 6)}...${currentGame.player2.slice(-4)}` : "Waiting"}
+          value={currentGame?.player2 && currentGame.player2 !== "0x0000000000000000000000000000000000000000" ? `${currentGame.player2.slice(0, 6)}...${currentGame.player2.slice(-4)}` : "Waiting"}
         />
       </div>
     </motion.aside>
