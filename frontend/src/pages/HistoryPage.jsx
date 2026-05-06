@@ -13,10 +13,10 @@ export default function HistoryPage() {
       <div className="w-full max-w-5xl space-y-8">
         <section className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
           <div className="space-y-4">
-            <p className="text-sm uppercase tracking-[0.35em] text-secondary">Match Archive</p>
-            <h2 className="text-4xl leading-tight sm:text-5xl">Review completed games from on-chain event history.</h2>
+            <p className="text-sm uppercase tracking-[0.35em] text-secondary">History</p>
+            <h2 className="text-4xl leading-tight sm:text-5xl">Your completed matches.</h2>
             <p className="max-w-2xl text-2xl leading-relaxed text-foreground/75">
-              Every finished round is queryable from emitted contract events, including who you played, what both sides revealed, and how the match resolved.
+              Every finished game is stored permanently on-chain. Results, moves, and opponents are all pulled directly from contract events.
             </p>
           </div>
           <motion.aside
@@ -111,7 +111,7 @@ function InfoCell({ label, value }) {
 
 function resultTone(result) {
   if (result === "You Won") {
-    return "border border-accent/35 bg-accent/10 text-accent";
+    return "border border-green-500/35 bg-green-500/10 text-green-400";
   }
 
   if (result === "You Lost") {

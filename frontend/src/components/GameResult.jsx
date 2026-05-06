@@ -5,7 +5,7 @@ export default function GameResult({ game, playerAddress }) {
   const result = getResultText(game.winner, game.isDraw, playerAddress);
   const resultTone =
     result === "You Won"
-      ? "border-accent/40 bg-accent/10 text-accent"
+      ? "border-green-500/40 bg-green-500/10 text-green-400"
       : result === "You Lost"
         ? "border-destructive/40 bg-destructive/10 text-destructive"
         : "border-secondary/40 bg-secondary/10 text-secondary";

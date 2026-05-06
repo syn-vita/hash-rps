@@ -62,10 +62,10 @@ export default function HomePage() {
       <div className="w-full max-w-5xl space-y-8">
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-4">
-            <p className="text-sm uppercase tracking-[0.35em] text-secondary">Mission Control</p>
-            <h2 className="text-4xl leading-tight sm:text-5xl">Spin up a match or jump back into your current round.</h2>
+            <p className="text-sm uppercase tracking-[0.35em] text-secondary">Play</p>
+            <h2 className="text-4xl leading-tight sm:text-5xl">Create or join a match.</h2>
             <p className="max-w-2xl text-2xl leading-relaxed text-foreground/75">
-              Create a room to challenge another wallet, or join with a shared game ID. Once both players commit, the reveal clock starts.
+              Player 1 creates a game and shares the ID. Player 2 joins with that ID. Once both players commit their move, the reveal phase begins.
             </p>
           </div>
           <StatusPanel activeGameId={activeGameId} currentGame={currentGame} isGameLoading={isGameLoading} />
@@ -96,8 +96,8 @@ export default function HomePage() {
         <section className="grid gap-6 lg:grid-cols-2">
           <ActionPanel
             kicker="Player One"
-            title="Create a new arena"
-            description="Open a fresh match, then share the game ID with your opponent. Your wallet becomes Player 1."
+            title="Create a game"
+            description="Opens a new match on-chain. Share the game ID with your opponent so they can join."
           >
             <button
               onClick={handleCreateGame}
@@ -116,8 +116,8 @@ export default function HomePage() {
 
           <ActionPanel
             kicker="Player Two"
-            title="Join with a shared ID"
-            description="Paste the game number from Player 1. Joining immediately links this wallet to that contract game."
+            title="Join a game"
+            description="Enter the game ID from Player 1 to join their match as Player 2."
           >
             <form className="space-y-4" onSubmit={handleJoinGame}>
               <label className="block">

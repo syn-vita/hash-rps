@@ -6,7 +6,7 @@ import { hardhat, sepolia } from "wagmi/chains";
 import { http } from "viem";
 
 const config = getDefaultConfig({
-  appName: "RPS Chain",
+  appName: "Hash RPS",
   projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "demo-project-id",
   chains: [sepolia, hardhat],
   transports: {

@@ -18,7 +18,7 @@ export default function Layout({ children }) {
               to="/home"
               className="text-sm uppercase tracking-[0.35em] text-secondary hover:text-foreground focus-visible:rounded-sm"
             >
-              RPS Chain
+              Hash RPS
             </Link>
             <nav className="flex items-center gap-2 rounded-full border border-primary/20 bg-surface/60 p-1">
               <Link
