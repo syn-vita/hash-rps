@@ -26,7 +26,6 @@ export function useGameHistory() {
             address: CONTRACT_ADDRESS,
             abi: CONTRACT_ABI,
             eventName: "GameCreated",
-            args: { player1: address },
             fromBlock: 10802455n,
             toBlock: "latest"
           }),
@@ -34,16 +33,21 @@ export function useGameHistory() {
             address: CONTRACT_ADDRESS,
             abi: CONTRACT_ABI,
             eventName: "GameJoined",
-            args: { player2: address },
             fromBlock: 10802455n,
             toBlock: "latest"
           })
         ]);
 
+        const normalizedAddress = address.toLowerCase();
+        const relevantLogs = [
+          ...createdLogs.filter((log) => log.args.player1?.toLowerCase() === normalizedAddress),
+          ...joinedLogs.filter((log) => log.args.player2?.toLowerCase() === normalizedAddress)
+        ];
+
         const uniqueIds = [...new Set(
-          [...createdLogs, ...joinedLogs]
+          relevantLogs
             .map((log) => log.args.gameId)
-            .filter(Boolean)
+            .filter((id) => id !== undefined && id !== null)
             .map(String)
         )].map(BigInt);
 
