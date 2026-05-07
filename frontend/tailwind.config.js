@@ -4,25 +4,30 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "#0f0f23",
-        surface: "#27273b",
-        primary: "#7c3aed",
-        secondary: "#a78bfa",
-        accent: "#f43f5e",
-        foreground: "#e2e8f0",
-        border: "#4c1d95",
+        background: "#0c0c0c",
+        surface: "rgba(255,255,255,0.03)",
+        "surface-raised": "rgba(255,255,255,0.06)",
+        foreground: "#ffffff",
+        "foreground-muted": "rgba(255,255,255,0.45)",
+        "foreground-subtle": "rgba(255,255,255,0.30)",
+        border: "rgba(255,255,255,0.08)",
+        "border-strong": "rgba(255,255,255,0.14)",
+        primary: "#22c55e",
+        "primary-on": "#000000",
+        "primary-glow": "rgba(34,197,94,0.15)",
         destructive: "#ef4444"
       },
       fontFamily: {
-        heading: ["\"Press Start 2P\"", "cursive"],
-        body: ["VT323", "monospace"]
+        sans: ["Inter", "system-ui", "sans-serif"]
       },
       boxShadow: {
-        neon: "0 0 24px rgba(124, 58, 237, 0.4)",
-        rose: "0 0 24px rgba(244, 63, 94, 0.4)"
+        "live-dot": "0 0 6px rgba(34,197,94,0.6)"
       },
-      backgroundImage: {
-        grid: "linear-gradient(rgba(167,139,250,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(167,139,250,0.1) 1px, transparent 1px)"
+      borderRadius: {
+        card: "8px",
+        btn: "6px",
+        input: "6px",
+        pill: "7px"
       }
     }
   },

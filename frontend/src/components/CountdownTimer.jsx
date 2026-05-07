@@ -5,32 +5,32 @@ export default function CountdownTimer({ deadline }) {
   const [secondsLeft, setSecondsLeft] = useState(0);
 
   useEffect(() => {
-    function updateSecondsLeft() {
-      const current = Math.floor(Date.now() / 1000);
-      setSecondsLeft(Math.max(0, deadline - current));
+    function update() {
+      setSecondsLeft(Math.max(0, deadline - Math.floor(Date.now() / 1000)));
     }
-
-    updateSecondsLeft();
-    const interval = window.setInterval(updateSecondsLeft, 1000);
-
-    return () => window.clearInterval(interval);
+    update();
+    const id = window.setInterval(update, 1000);
+    return () => window.clearInterval(id);
   }, [deadline]);
 
   const minutes = Math.floor(secondsLeft / 60);
   const seconds = secondsLeft % 60;
-  const isUrgent = secondsLeft > 0 && secondsLeft <= 60;
   const isExpired = secondsLeft === 0;
+  const isUrgent = !isExpired && secondsLeft <= 60;
+  const isWarning = !isExpired && !isUrgent && secondsLeft <= 300;
+
+  const colorClass = isExpired
+    ? "border-destructive/30 bg-destructive/[0.06] text-destructive"
+    : isUrgent
+      ? "border-destructive/30 bg-destructive/[0.06] text-destructive"
+      : isWarning
+        ? "border-[#f59e0b]/30 bg-[#f59e0b]/[0.06] text-[#f59e0b]"
+        : "border-border bg-surface text-foreground";
 
   return (
     <motion.div
-      className={`rounded-2xl border px-5 py-4 text-center text-3xl ${
-        isExpired
-          ? "border-destructive/40 bg-destructive/10 text-destructive"
-          : isUrgent
-            ? "border-accent/40 bg-accent/10 text-accent"
-            : "border-primary/30 bg-background/70 text-foreground"
-      }`}
-      animate={isUrgent ? { opacity: [1, 0.6, 1] } : undefined}
+      className={`rounded-card border px-5 py-4 text-center text-3xl font-black tabular-nums tracking-[-0.02em] ${colorClass}`}
+      animate={isUrgent ? { opacity: [1, 0.55, 1] } : undefined}
       transition={isUrgent ? { duration: 1, repeat: Infinity, ease: "easeInOut" } : undefined}
     >
       {isExpired ? "Time Expired" : `${minutes}:${seconds.toString().padStart(2, "0")}`}

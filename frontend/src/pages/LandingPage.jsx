@@ -3,41 +3,50 @@ import { motion } from "framer-motion";
 
 export default function LandingPage() {
   return (
-    <main className="relative min-h-dvh overflow-hidden bg-background text-foreground">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.36),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(244,63,94,0.24),transparent_28%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-grid bg-[size:48px_48px] opacity-20" />
-      <div className="pointer-events-none absolute inset-0 scanlines opacity-20" />
+    <main className="min-h-dvh bg-background text-foreground">
+      <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="h-[7px] w-[7px] rounded-full bg-primary shadow-live-dot" />
+            <span className="text-[13px] font-bold uppercase tracking-[0.06em]">Hash RPS</span>
+          </div>
+          <ConnectButton accountStatus="address" chainStatus="icon" showBalance={false} />
+        </div>
+      </header>
 
-      <section className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col justify-center px-6 py-14">
+      <section className="mx-auto flex min-h-[calc(100dvh-57px)] w-full max-w-6xl items-center px-4 py-16 sm:px-6">
         <motion.div
-          className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]"
+          className="grid w-full items-center gap-16 lg:grid-cols-[1.1fr_0.9fr]"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
           <div className="space-y-8">
-            <div className="space-y-2">
-              <p className="text-sm uppercase tracking-[0.38em] text-secondary">Ethereum Sepolia</p>
-              <h1 className="text-6xl leading-none tracking-tight sm:text-7xl">
-                Hash RPS
+            <div>
+              <p className="mb-4 inline-flex items-center gap-2 rounded border border-primary/30 bg-primary/10 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">
+                <span className="h-[5px] w-[5px] rounded-full bg-primary" />
+                Live on Sepolia
+              </p>
+              <h1 className="text-[72px] font-black leading-[0.9] tracking-[-0.04em]">
+                Rock<br />Paper<br />Scissors.
               </h1>
             </div>
-            <p className="max-w-xl text-2xl leading-relaxed text-foreground/78">
-              Rock, Paper, Scissors on-chain. Moves stay hidden until both players reveal — no referee, no trust required.
+            <p className="max-w-md text-base leading-relaxed text-foreground-muted">
+              Commit-reveal on-chain. Moves stay hidden until both players reveal — no referee, no trust required.
             </p>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="flex flex-wrap items-center gap-4">
               <ConnectButton accountStatus="address" chainStatus="icon" showBalance={false} />
-              <span className="text-sm uppercase tracking-[0.24em] text-foreground/50">
-                Connect wallet to play
+              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground-subtle">
+                Ethereum Sepolia
               </span>
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <HeroPanel title="Commit-Reveal" body="Your move is hashed and locked on-chain before either player sees the other's choice." />
-            <HeroPanel title="No Middleman" body="Every state transition — join, commit, reveal, result — is enforced by the smart contract." />
-            <HeroPanel title="Timeout Protection" body="If your opponent ghosts after you reveal, you can claim the win once the timer expires." />
-            <HeroPanel title="On-Chain History" body="Every completed match is permanently recorded and queryable from contract events." />
+          <div className="grid grid-cols-2 divide-x divide-y divide-border overflow-hidden rounded-card border border-border">
+            <FeatureCell label="Commit-Reveal" body="Move hashed and locked on-chain before either player sees the other's choice." />
+            <FeatureCell label="No Middleman" body="Every state transition is enforced by the smart contract." />
+            <FeatureCell label="Timeout Protection" body="Claim the win if your opponent ghosts after you reveal." />
+            <FeatureCell label="On-Chain History" body="Every completed match is permanently recorded and queryable." />
           </div>
         </motion.div>
       </section>
@@ -45,16 +54,11 @@ export default function LandingPage() {
   );
 }
 
-function HeroPanel({ title, body }) {
+function FeatureCell({ label, body }) {
   return (
-    <motion.article
-      className="rounded-[28px] border border-primary/25 bg-surface/75 p-5 shadow-neon backdrop-blur"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-    >
-      <p className="mb-3 text-xs uppercase tracking-[0.3em] text-secondary">{title}</p>
-      <p className="text-lg leading-relaxed text-foreground/82">{body}</p>
-    </motion.article>
+    <div className="bg-surface p-5">
+      <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary">{label}</p>
+      <p className="text-xs leading-relaxed text-foreground-muted">{body}</p>
+    </div>
   );
 }

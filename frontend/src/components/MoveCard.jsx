@@ -2,9 +2,9 @@ import { motion } from "framer-motion";
 import { MOVE_NAMES } from "../lib/moves";
 
 const ICONS = {
-  1: "R",
-  2: "P",
-  3: "S"
+  1: "🪨",
+  2: "📄",
+  3: "✂️"
 };
 
 export default function MoveCard({ move, selected, disabled, onClick, reveal = false }) {
@@ -13,23 +13,22 @@ export default function MoveCard({ move, selected, disabled, onClick, reveal = f
       type="button"
       disabled={disabled}
       onClick={() => onClick?.(move)}
-      whileTap={disabled ? undefined : { scale: 0.96 }}
-      className={`group relative flex min-h-44 w-full flex-col items-center justify-center overflow-hidden rounded-[28px] border p-5 text-center ${
+      whileTap={disabled ? undefined : { scale: 0.97 }}
+      className={`flex min-h-36 w-full flex-col items-center justify-center gap-3 rounded-card border p-5 text-center transition-colors ${
         selected
-          ? "border-primary bg-primary/15 text-foreground shadow-neon"
+          ? "border-primary bg-primary/[0.06] text-foreground"
           : disabled
-            ? "border-border/50 bg-surface/50 text-foreground/35"
-            : "border-border bg-surface/80 text-foreground hover:-translate-y-1 hover:border-secondary hover:shadow-neon"
+            ? "cursor-not-allowed border-border bg-surface opacity-40"
+            : "border-border bg-surface text-foreground hover:border-border-strong hover:bg-surface-raised"
       } motion-reduce:transform-none`}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(167,139,250,0.22),transparent_35%)] opacity-0 transition-opacity group-hover:opacity-100" />
-      <div className="relative mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-current/30 bg-background/50 text-4xl">
-        {ICONS[move]}
+      <span className="text-4xl leading-none" aria-hidden="true">{ICONS[move]}</span>
+      <div>
+        <p className="text-sm font-bold tracking-[-0.01em]">{MOVE_NAMES[move]}</p>
+        <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-foreground-subtle">
+          {reveal ? "Revealed" : selected ? "Selected" : "Choose"}
+        </p>
       </div>
-      <p className="relative text-xl uppercase tracking-[0.24em]">{MOVE_NAMES[move]}</p>
-      <p className="relative mt-2 text-sm uppercase tracking-[0.22em] text-foreground/60">
-        {reveal ? "Revealed" : selected ? "Locked" : "Choose"}
-      </p>
     </motion.button>
   );
 }
